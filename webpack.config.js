@@ -1,3 +1,5 @@
+var path = require('path');
+
 module.exports = {
 	entry: __dirname + '/app/main.jsx',
 	output: {
@@ -8,7 +10,10 @@ module.exports = {
 	module: {
 		loaders: [{
 			test: /jsx?$/,
-			loader: 'babel'
+			loader: 'babel',
+			query: {
+				plugins: [path.resolve(__dirname, './babelRelayPlugin.js')]
+			}
 		}]
 	},
 	resolve: {

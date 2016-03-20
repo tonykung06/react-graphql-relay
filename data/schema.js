@@ -11,7 +11,7 @@ let counter = 42;
 const myData = [42, 43, 44];
 
 const LinkType = new GraphQLObjectType({
-	name: 'Counter',
+	name: 'Link',
 	fields: () => ({
 		_id: {
 			type: GraphQLString

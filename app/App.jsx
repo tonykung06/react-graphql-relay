@@ -9,16 +9,12 @@ const _getAppState = () => {
 };
 
 export default class App extends React.Component {
-	constructor(props) {
-		super(props);
-
-		this.onChange = this.onChange.bind(this);
-		this.state = _getAppState();
-	}
-
-	onChange() {
+	static propTypes = {};
+	static defaultProps = {};
+	state = _getAppState();
+	onChange = () => {
 		this.setState(_getAppState());
-	}
+	};
 
 	componentWillMount() {
 		LinkStore.removeListener('change', this.onChange);
