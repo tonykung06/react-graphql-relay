@@ -9,6 +9,7 @@ import {
 let db;
 let counter = 42;
 const myData = [42, 43, 44];
+const store = {};
 
 const LinkType = new GraphQLObjectType({
 	name: 'Link',
@@ -21,6 +22,16 @@ const LinkType = new GraphQLObjectType({
 		},
 		url: {
 			type: GraphQLString
+		}
+	})
+});
+
+const StoreType = new GraphQLObjectType({
+	name: 'Store',
+	fields: () => ({
+		links: {
+			type: new GraphQLList(LinkType),
+			resolve: () => db.collection('links').find({}).toArray()
 		}
 	})
 });
@@ -44,6 +55,10 @@ const schema = new GraphQLSchema({
 			links: {
 				type: new GraphQLList(LinkType),
 				resolve: () => db.collection('links').find({}).toArray()
+			},
+			store: {
+				type: StoreType,
+				resolve: () => store
 			}
 		})
 	}),
