@@ -9,9 +9,11 @@ import {
 } from 'graphql';
 
 import {
+	globalIdField,
 	connectionDefinitions,
 	connectionArgs,
-	connectionFromPromisedArray
+	connectionFromPromisedArray,
+	mutationWithClientMutationId
 } from 'graphql-relay'
 
 let db;
@@ -63,6 +65,7 @@ const StoreType = new GraphQLObjectType({
 		//     }
 		//   }
 		// }
+		id: globalIdField('Store'),
 		linkConnection: {
 			type: linkConnection.connectionType,
 			args: connectionArgs,//e.g. first: 5, last: 3
@@ -72,6 +75,74 @@ const StoreType = new GraphQLObjectType({
 			)
 		}
 	})
+});
+
+//e.g.
+// mutation CreateLinkMutation($input: CreateLinkInput!) {
+//   createLink(input: $input) {
+//     clientMutationId,
+//     link {
+//       id,
+//       title,
+//       url
+//     }
+//   }
+// }
+
+// {
+//   "input": {
+//   	"clientMutationId": 44,
+//   	"title": "test",
+//   	"url": "hk.yahoo.com"
+//   }
+// }
+
+//e.g.2
+// mutation CeateLinkMutation($input: CreateLinkInput!) {
+//   createLink(input: $input) {
+//     clientMutationId
+//     linkEdge {
+//       node {
+//         id
+//         title
+//         url
+//       }
+//     }
+//   }
+// }
+const createLinkMutation = mutationWithClientMutationId({
+	name: 'CreateLink',
+	inputFields: {
+		title: {
+			type: new GraphQLNonNull(GraphQLString)
+		},
+		url: {
+			type: new GraphQLNonNull(GraphQLString)
+		}
+	},
+	outputFields: {
+		// link: {
+		// 	type: LinkType,
+		// 	resolve: obj => obj.ops[0]
+		// }
+		linkEdge: {
+			type: linkConnection.edgeType,
+			resolve: obj => ({
+				node: obj.ops[0],
+				cursor: obj.insertedId
+			})
+		},
+		store: {
+			type: StoreType,
+			resolve: () => store
+		}
+	},
+	mutateAndGetPayload: ({title, url}) => {
+		return db.collection('links').insertOne({
+			title,
+			url
+		});
+	}
 });
 
 const schema = new GraphQLSchema({
@@ -106,7 +177,8 @@ const schema = new GraphQLSchema({
 			incrementCounter: {
 				type: GraphQLInt,
 				resolve: () => ++counter
-			}
+			},
+			createLink: createLinkMutation
 		})
 	})
 });
