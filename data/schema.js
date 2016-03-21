@@ -67,7 +67,7 @@ const StoreType = new GraphQLObjectType({
 			type: linkConnection.connectionType,
 			args: connectionArgs,//e.g. first: 5, last: 3
 			resolve: (_, args) => connectionFromPromisedArray(
-				db.collection('links').find({}).toArray(),
+				db.collection('links').find({}).limit(args.first).toArray(),
 				args
 			)
 		}
