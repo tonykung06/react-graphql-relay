@@ -23,32 +23,34 @@ app.get('/data/links', (req, res) => {
 });
 
 (async () => {
-	const db = await MongoClient.connect(config.MONGO_CONNECTION);
-	const schema = makeSchema(db);
+	try {
+		const db = await MongoClient.connect(config.MONGO_CONNECTION);
+		const schema = makeSchema(db);
 
-	app.use('/graphql', GraphQLHTTP({
-		schema,
-		graphiql: true
-	}));
+		app.use('/graphql', GraphQLHTTP({
+			schema,
+			graphiql: true
+		}));
 
-	app.listen(3000, () => {
-		console.log('express server listen at port 3000');
-	});
+		app.listen(3000, () => {
+			console.log('express server listen at port 3000');
+		});
 
-	const json = await graphql(schema, introspectionQuery);
-	fs.stat('./data/schema.json', (err, stat) => {
-		if (err) {
-			fs.writeFile('./data/schema.json', JSON.stringify(json, null, 4), err => {
-				if (err) {
-					throw err;
-				}
+		const json = await graphql(schema, introspectionQuery);
+		fs.stat('./data/schema.json', (err, stat) => {
+			if (err) {
+				fs.writeFile('./data/schema.json', JSON.stringify(json, null, 4), err => {
+					if (err) {
+						throw err;
+					}
 
-				console.log('JSON schema is created');
-			});
-		}
-	});
-
-	
+					console.log('JSON schema is created');
+				});
+			}
+		});
+	} catch (e) {
+		console.log(e);
+	}
 })();
 
 // MongoClient.connect(config.MONGO_CONNECTION, (err, database) => {

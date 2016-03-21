@@ -1,5 +1,6 @@
 import React from 'react';
 import Relay from 'react-relay';
+import Link from './components/Link.jsx';
 
 class App extends React.Component {
 	static propTypes = {};
@@ -7,11 +8,8 @@ class App extends React.Component {
 
 	render() {
 		const content = this.props.store.links.map(link => {
-			//TODO: Make li a <Link />
 			return (
-				<li key={link._id}>
-					<a href={link.url}>{link.title}</a>
-				</li>
+				<Link key={link._id} link={link} />
 			);
 		});
 
@@ -31,10 +29,10 @@ App = Relay.createContainer(App, {
 	fragments: {
 		store: () => Relay.QL`
 			fragment on Store {
+				#fetching 5 links only
 				links {
 					_id,
-					title,
-					url
+					${Link.getFragment('link')}
 				}
 			}
 		`

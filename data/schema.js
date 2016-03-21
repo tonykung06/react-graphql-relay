@@ -3,8 +3,16 @@ import {
 	GraphQLObjectType,
 	GraphQLInt,
 	GraphQLString,
-	GraphQLList
+	GraphQLList,
+	GraphQLNonNull,
+	GraphQLID
 } from 'graphql';
+
+import {
+	connectionDefinitions,
+	connectionArgs,
+	connectionFromPromisedArray
+} from 'graphql-relay'
 
 let db;
 let counter = 42;
@@ -14,8 +22,12 @@ const store = {};
 const LinkType = new GraphQLObjectType({
 	name: 'Link',
 	fields: () => ({
-		_id: {
-			type: GraphQLString
+		// _id: {
+		// 	type: GraphQLString
+		// },
+		id: {
+			type: new GraphQLNonNull(GraphQLID),
+			resolve: obj => obj._id
 		},
 		title: {
 			type: GraphQLString
@@ -26,12 +38,38 @@ const LinkType = new GraphQLObjectType({
 	})
 });
 
+const linkConnection = connectionDefinitions({
+	name: 'Link',
+	nodeType: LinkType
+});
+
 const StoreType = new GraphQLObjectType({
 	name: 'Store',
 	fields: () => ({
-		links: {
-			type: new GraphQLList(LinkType),
-			resolve: () => db.collection('links').find({}).toArray()
+		// query {
+		//   store {
+		//     linkConnection(first: 2, after: "YXJyYXljb25uZWN0aW9uOjM=") {
+		//       pageInfo {
+		//         hasNextPage
+		//       }
+		//       edges {
+		//         cursor //giving the "YXJyYXljb25uZWN0aW9uOjM=" which is used in after arg
+		//         node {
+		//           id,
+		//           title,
+		//           url
+		//         }
+		//       }
+		//     }
+		//   }
+		// }
+		linkConnection: {
+			type: linkConnection.connectionType,
+			args: connectionArgs,//e.g. first: 5, last: 3
+			resolve: (_, args) => connectionFromPromisedArray(
+				db.collection('links').find({}).toArray(),
+				args
+			)
 		}
 	})
 });
