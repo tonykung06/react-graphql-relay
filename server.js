@@ -37,17 +37,24 @@ app.get('/data/links', (req, res) => {
 		});
 
 		const json = await graphql(schema, introspectionQuery);
-		fs.stat('./data/schema.json', (err, stat) => {
+		fs.writeFile('./data/schema.json', JSON.stringify(json, null, 4), err => {
 			if (err) {
-				fs.writeFile('./data/schema.json', JSON.stringify(json, null, 4), err => {
-					if (err) {
-						throw err;
-					}
-
-					console.log('JSON schema is created');
-				});
+				throw err;
 			}
+
+			console.log('JSON schema is created');
 		});
+		// fs.stat('./data/schema.json', (err, stat) => {
+		// 	if (err) {
+		// 		fs.writeFile('./data/schema.json', JSON.stringify(json, null, 4), err => {
+		// 			if (err) {
+		// 				throw err;
+		// 			}
+
+		// 			console.log('JSON schema is created');
+		// 		});
+		// 	}
+		// });
 	} catch (e) {
 		console.log(e);
 	}

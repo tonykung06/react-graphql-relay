@@ -37,8 +37,19 @@ export default class CreateLinkMutation extends Relay.Mutation {
 			rangeBehaviors: {
 				// When the ships connection is not under the influence
 				// of any call, append the ship to the end of the connection
-				'': 'append'
+				'': 'prepend'
 			}
 		}];
+	}
+
+	getOptimisticResponse() {
+		return {
+			linkEdge: {
+				node: {
+					title: this.props.title,
+					url: this.props.url
+				}
+			}
+		};
 	}
 };
