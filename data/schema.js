@@ -10,6 +10,8 @@ import {
 
 import {
 	globalIdField,
+	fromGlobalId,
+	nodeDefinitions,
 	connectionDefinitions,
 	connectionArgs,
 	connectionFromPromisedArray,
@@ -19,7 +21,23 @@ import {
 let db;
 let counter = 42;
 const myData = [42, 43, 44];
-const store = {};
+class Store {}
+const store = new Store();
+const nodeDefs = nodeDefinitions((globalId) => {
+	const {type} = fromGlobalId(globalId);
+
+	if (type === 'Store') {
+		return store;
+	}
+
+	return null;
+}, (obj) => {
+	if (obj instanceof Store) {
+		return StoreType;
+	}
+
+	return null;
+});
 
 const LinkType = new GraphQLObjectType({
 	name: 'Link',
@@ -72,15 +90,29 @@ const StoreType = new GraphQLObjectType({
 		id: globalIdField('Store'),
 		linkConnection: {
 			type: linkConnection.connectionType,
-			args: connectionArgs,//e.g. first: 5, last: 3
-			resolve: (_, args) => connectionFromPromisedArray(
-				db.collection('links').find({}).sort({
-					createdAt: -1
-				}).limit(args.first).toArray(),
-				args
-			)
+			args: {
+				...connectionArgs,//e.g. first: 5, last: 3
+				query: {
+					type: GraphQLString
+				}
+			},
+			resolve: (_, args) => {
+				const findParams = {};
+
+				if (args.query) {
+					findParams.title = new RegExp(args.query, 'i');
+				}
+
+				return connectionFromPromisedArray(
+					db.collection('links').find(findParams).sort({
+						createdAt: -1
+					}).limit(args.first).toArray(),
+					args
+				);
+			}
 		}
-	})
+	}),
+	interfaces: [nodeDefs.nodeInterface]
 });
 
 //e.g.
@@ -175,7 +207,8 @@ const schema = new GraphQLSchema({
 			store: {
 				type: StoreType,
 				resolve: () => store
-			}
+			},
+			node: nodeDefs.nodeField
 		})
 	}),
 	mutation: new GraphQLObjectType({

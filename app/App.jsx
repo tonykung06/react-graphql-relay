@@ -2,8 +2,14 @@ import React from 'react';
 import Relay from 'react-relay';
 import Link from './components/Link.jsx';
 import CreateLinkMutation from './mutations/CreateLinkMutation';
+import {debounce} from 'lodash';
 
 class App extends React.Component {
+	constructor(props) {
+		super(props);
+
+		this.search = debounce(this.search, 300);
+	}
 	static propTypes = {};
 	static defaultProps = {};
 	setLimit = (e) => {
@@ -11,6 +17,13 @@ class App extends React.Component {
 
 		this.props.relay.setVariables({
 			limit: newLimit
+		});
+	};
+	search = (e) => {
+		const query = this.refs.search.value;
+
+		this.props.relay.setVariables({
+			query
 		});
 	};
 	handleSubmit = (e) => {
@@ -44,6 +57,7 @@ class App extends React.Component {
 				</form>
 
 				Showing: &nbsp;
+				<input type="text" ref="search" placeholder="Search" onChange={this.search} />
 				<select onChange={this.setLimit} defaultValue={this.props.relay.variables.limit}>
 					<option value="3">3</option>
 					<option value="200">200</option>
@@ -59,13 +73,14 @@ class App extends React.Component {
 //declare the data requirement for this component
 App = Relay.createContainer(App, {
 	initialVariables: {
-		limit: 200
+		limit: 200,
+		query: ''
 	},
 	fragments: {
 		store: () => Relay.QL`
 			fragment on Store {
 				id,
-				linkConnection(first: $limit) {
+				linkConnection(first: $limit, query: $query) {
 					edges {
 						node {
 							id,
